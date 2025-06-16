@@ -31,17 +31,20 @@ const fetchPageSpeedData = async (url, strategy) => {
     });
 
     const metrics = {
-      FCP: getMetric("first-contentful-paint"),
-      LCP: getMetric("largest-contentful-paint"),
-      FID: getMetric("interactive"),
-      CLS: getMetric("cumulative-layout-shift"),
-      speedIndex: getMetric("speed-index"),
-      TBT: getMetric("total-blocking-time"),
+      "First Contentful Paint": getMetric("first-contentful-paint"),
+      "Largest Contentful Paint": getMetric("largest-contentful-paint"),
+      "First Input Delay": getMetric("interactive"),
+      "Cumulative Layout Shift": getMetric("cumulative-layout-shift"),
+      "Speed Index": getMetric("speed-index"),
+      "Total Blocking Time": getMetric("total-blocking-time"),
     };
 
     return { scores, metrics };
   } catch (err) {
-    console.error(`Failed to fetch PageSpeed data for ${url} (${strategy})`, err.response?.data || err.message);
+    console.error(
+      `Failed to fetch PageSpeed data for ${url} (${strategy})`,
+      err.response?.data || err.message
+    );
     throw err;
   }
 };
