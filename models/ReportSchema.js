@@ -17,55 +17,55 @@ const reportSchema = new mongoose.Schema(
     },
     metrics: {
       mobile: {
-        LCP: {
+        "Largest Contentful Paint": {
           value: { type: String, required: true }, // Largest Contentful Paint value
           status: { type: String, required: true }, // Status of LCP
         },
-        FCP: {
+        "First Contentful Paint": {
           value: { type: String, required: true }, // First Contentful Paint value
           status: { type: String, required: true }, // Status of FCP
         },
 
-        FID: {
+        "First Input Delay": {
           value: { type: String, required: true }, // First Input Delay value
           status: { type: String, required: true }, // Status of FID
         },
-        CLS: {
+        "Cumulative Layout Shift": {
           value: { type: String, required: true }, // Cumulative Layout Shift value
           status: { type: String, required: true }, // Status of CLS
         },
-        speedIndex: {
+        "Speed Index": {
           value: { type: String, required: true }, // Speed Index value
           status: { type: String, required: true }, // Status of Speed Index
         },
-        TBT: {
+        "Total Blocking Time": {
           value: { type: String, required: true }, // Total Blocking Time value
           status: { type: String, required: true }, // Status of TBT
         },
       },
       desktop: {
-        LCP: {
+        "Largest Contentful Paint": {
           value: { type: String, required: true }, // Largest Contentful Paint value
           status: { type: String, required: true }, // Status of LCP
         },
-        FCP: {
+        "First Contentful Paint": {
           value: { type: String, required: true }, // First Contentful Paint value
           status: { type: String, required: true }, // Status of FCP
         },
 
-        FID: {
+        "First Input Delay": {
           value: { type: String, required: true }, // First Input Delay value
           status: { type: String, required: true }, // Status of FID
         },
-        CLS: {
+        "Cumulative Layout Shift": {
           value: { type: String, required: true }, // Cumulative Layout Shift value
           status: { type: String, required: true }, // Status of CLS
         },
-        speedIndex: {
+        "Speed Index": {
           value: { type: String, required: true }, // Speed Index value
           status: { type: String, required: true }, // Status of Speed Index
         },
-        TBT: {
+        "Total Blocking Time": {
           value: { type: String, required: true }, // Total Blocking Time value
           status: { type: String, required: true }, // Status of TBT
         },
