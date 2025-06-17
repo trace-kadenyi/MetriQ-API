@@ -8,11 +8,13 @@ const reportSchema = new mongoose.Schema(
         performance: { type: Number, required: true },
         accessibility: { type: Number, required: true },
         seo: { type: Number, required: true },
+        bestPractices: { type: Number, required: true },
       },
       desktop: {
         performance: { type: Number, required: true },
         accessibility: { type: Number, required: true },
         seo: { type: Number, required: true },
+        bestPractices: { type: Number, required: true },
       },
     },
     metrics: {

@@ -3,7 +3,7 @@ const axios = require("axios");
 const fetchPageSpeedData = async (url, strategy) => {
   const API_KEY = process.env.PAGESPEED_API_KEY;
   const API_URL = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed";
-  const requestUrl = `${API_URL}?url=${url}&strategy=${strategy}&category=performance&category=accessibility&category=seo&key=${API_KEY}`;
+  const requestUrl = `${API_URL}?url=${url}&strategy=${strategy}&category=performance&category=accessibility&category=seo&category=best-practices&key=${API_KEY}`;
 
   try {
     const res = await axios.get(requestUrl);
@@ -16,6 +16,7 @@ const fetchPageSpeedData = async (url, strategy) => {
       performance: Math.round(categories.performance?.score * 100),
       accessibility: Math.round(categories.accessibility?.score * 100),
       seo: Math.round(categories.seo?.score * 100),
+      bestPractices: Math.round(categories["best-practices"]?.score * 100),
     };
 
     const getMetric = (key) => ({
