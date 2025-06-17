@@ -23,6 +23,10 @@ const createOrUpdateReport = async (req, res) => {
           mobile: mobileResult.metrics,
           desktop: desktopResult.metrics,
         },
+        suggestions: {
+          mobile: mobileResult.suggestions,
+          desktop: desktopResult.suggestions,
+        },
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
@@ -31,7 +35,6 @@ const createOrUpdateReport = async (req, res) => {
       success: true,
       report: updatedReport,
     });
-    console.log("Updated or created report:", updatedReport);
   } catch (err) {
     console.error("Failed to create/update report:", err.message);
     res.status(500).json({

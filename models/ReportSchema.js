@@ -73,6 +73,24 @@ const reportSchema = new mongoose.Schema(
         },
       },
     },
+    suggestions: {
+      mobile: [
+        {
+          title: { type: String, required: true },
+          displayValue: { type: String }, // Can be null or empty sometimes
+          description: { type: String },
+          score: { type: Number },
+        },
+      ],
+      desktop: [
+        {
+          title: { type: String, required: true },
+          displayValue: { type: String },
+          description: { type: String },
+          score: { type: Number },
+        },
+      ],
+    },
   },
   { timestamps: true }
 );
