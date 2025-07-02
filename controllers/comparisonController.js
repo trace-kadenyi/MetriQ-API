@@ -1,9 +1,6 @@
 const fetchPageSpeedData = require("../utils/fetchPageSpeedData");
 
-/* same helper style you use in favourites */
-const extractAnonId = (req) => req.header("x-anon-id") || null;
-
-/* small util: just scores, no metrics/suggestions */
+/* ---------- helper: just the scores ---------- */
 const fetchScoresOnly = async (url) => {
   const [mobile, desktop] = await Promise.all([
     fetchPageSpeedData(url, "mobile"),
@@ -12,7 +9,7 @@ const fetchScoresOnly = async (url) => {
   return { mobile: mobile.scores, desktop: desktop.scores };
 };
 
-/* POST /api/compare  */
+/* ---------- POST /api/compare ---------- */
 const createComparison = async (req, res) => {
   try {
     const { userSiteUrl, competitors = [] } = req.body || {};
@@ -24,17 +21,49 @@ const createComparison = async (req, res) => {
       });
     }
 
-    const userScores = await fetchScoresOnly(userSiteUrl.trim());
-
-    const comps = [];
-    for (const { url, label } of competitors.slice(0, 3)) {
-      const scores = await fetchScoresOnly(url.trim());
-      comps.push({ url: url.trim(), label, scores });
+    /* ---------- user site ---------- */
+    let userScores = null;
+    try {
+      userScores = await fetchScoresOnly(userSiteUrl.trim());
+    } catch (err) {
+      return res.status(500).json({
+        success: false,
+        message: `Could not retrieve PageSpeed data for ${userSiteUrl}`,
+      });
     }
 
-    // 🚫 no DB save
+    /* ---------- competitors ---------- */
+    const settled = await Promise.allSettled(
+      competitors.slice(0, 3).map((c) => {
+        const safeUrl = (c.url || "").trim();
+        if (!safeUrl) return Promise.reject(new Error("Missing URL"));
+        return fetchScoresOnly(safeUrl);
+      })
+    );
+
+    const comps = settled.map((result, i) => {
+      const { url, label } = competitors[i];
+      if (result.status === "fulfilled") {
+        return {
+          url: (url || "").trim(),
+          label,
+          scores: result.value,
+          error: false,
+        };
+      }
+      return {
+        url: (url || "").trim(),
+        label,
+        scores: null,
+        error: true,
+        message: "Data not available",
+      };
+    });
+
+    /* ---------- response ---------- */
     res.json({
       success: true,
+      partial: comps.some((c) => c.error),
       comparison: {
         userSiteUrl: userSiteUrl.trim(),
         userScores,
@@ -44,7 +73,10 @@ const createComparison = async (req, res) => {
     });
   } catch (err) {
     console.error("Transient comparison error:", err.message);
-    res.status(500).json({ success: false, message: "Internal error" });
+    res.status(500).json({
+      success: false,
+      message: "Internal error",
+    });
   }
 };
 
