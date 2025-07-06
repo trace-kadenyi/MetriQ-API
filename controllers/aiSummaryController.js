@@ -1,5 +1,6 @@
 const axios = require("axios");
 
+// create AI summary/analysis func
 const createAISummary = async (req, res) => {
   const { inputText } = req.body;
   if (!inputText) return res.status(400).json({ error: "No text" });
