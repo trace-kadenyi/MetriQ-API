@@ -9,7 +9,7 @@ const fetchScoresOnly = async (url) => {
   return { mobile: mobile.scores, desktop: desktop.scores };
 };
 
-/* ---------- POST /api/compare ---------- */
+// create comparison
 const createComparison = async (req, res) => {
   try {
     const { userSiteUrl, competitors = [] } = req.body || {};
@@ -21,7 +21,7 @@ const createComparison = async (req, res) => {
       });
     }
 
-    /* ---------- user site ---------- */
+    // user site
     let userScores = null;
     try {
       userScores = await fetchScoresOnly(userSiteUrl.trim());
@@ -32,7 +32,7 @@ const createComparison = async (req, res) => {
       });
     }
 
-    /* ---------- competitors ---------- */
+    // competitors
     const settled = await Promise.allSettled(
       competitors.slice(0, 3).map((c) => {
         const safeUrl = (c.url || "").trim();
