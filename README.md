@@ -1,1 +1,1 @@
-# MetricMind API
+# Zyntra API
