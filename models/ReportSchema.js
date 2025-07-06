@@ -1,10 +1,12 @@
 const mongoose = require("mongoose");
 
+// metrics schema block
 const metricsSchema = new mongoose.Schema({
   value: { type: String, required: true },
   status: { type: String, required: true },
 });
 
+// report entry schema
 const reportEntrySchema = new mongoose.Schema(
   {
     scores: {
@@ -61,6 +63,7 @@ const reportEntrySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// main schema
 const reportSchema = new mongoose.Schema(
   {
     url: { type: String, required: true, unique: true },
