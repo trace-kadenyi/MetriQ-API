@@ -15,6 +15,7 @@ const reportRoutes = require("./routes/reportRoutes");
 const summarizeRoutes = require("./routes/summarize");
 const favouritesRoutes = require("./routes/favouritesRoutes");
 const comparisonRoutes = require("./routes/comparisonRoutes");
+const competitorAiRoutes = require("./routes/competitorAiAnalysisRoute");
 
 // connect to MongoDB
 mongoose.connect(process.env.DATABASE_URI);
@@ -41,6 +42,7 @@ app.use("/api/url", reportRoutes);
 app.use("/api/summarize", summarizeRoutes);
 app.use("/api/favourites", favouritesRoutes);
 app.use("/api/", comparisonRoutes);
+app.use("/api/ai/comparison");
 
 // start server
 mongoose.connection.once("open", () => {
