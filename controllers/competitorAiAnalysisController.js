@@ -1,4 +1,3 @@
-// controllers/competitorAi.controller.js
 const axios = require("axios");
 
 /**
@@ -22,7 +21,6 @@ const createAICompetitorAnalysis = async (req, res) => {
     return res.status(400).json({ error: "No comparison data supplied" });
 
   // ---------- 1.  Prepare a compact payload for the LLM ----------
-  // We only need the numeric scores; keep it small so we stay under token limits.
   const toTableRow = (label, { mobile, desktop }) =>
     [
       label,
