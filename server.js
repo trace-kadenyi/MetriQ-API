@@ -42,7 +42,7 @@ app.use("/api/url", reportRoutes);
 app.use("/api/summarize", summarizeRoutes);
 app.use("/api/favourites", favouritesRoutes);
 app.use("/api/", comparisonRoutes);
-app.use("/api/ai/comparison");
+app.use("/api/ai/comparison", competitorAiRoutes);
 
 // start server
 mongoose.connection.once("open", () => {
