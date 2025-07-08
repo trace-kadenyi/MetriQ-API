@@ -79,4 +79,47 @@ const toggleFavourite = async (req, res) => {
   }
 };
 
-module.exports = { getFavourites, toggleFavourite };
+/** POST /api/favourites/claim  – merge anon list into user account */
+const claimFavourites = async (req, res) => {
+  if (!req.user || !req.isAuthenticated()) {
+    return res.status(401).json({ success: false, message: "Not authenticated" });
+  }
+
+  const { anonId } = req.body;
+  if (!anonId) {
+    return res.status(400).json({ success: false, message: "anonId missing" });
+  }
+
+  try {
+    const anonDoc  = await Favourites.findOne({ anonId });
+    if (!anonDoc) {
+      return res.status(200).json({ success: true }); // nothing to merge
+    }
+
+    const userId   = req.user._id;
+    const userDoc  = await Favourites.findOne({ owner: userId });
+
+    if (userDoc) {
+      // merge & dedupe, respect 5‑item limit
+      userDoc.favourites = Array.from(
+        new Set([...userDoc.favourites, ...anonDoc.favourites])
+      ).slice(0, 5);
+      await userDoc.save();
+      await anonDoc.deleteOne();
+    } else {
+      // just convert the anon doc into the owner's
+      anonDoc.owner = userId;
+      anonDoc.anonId = null;
+      await anonDoc.save();
+    }
+
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    console.error("Failed to claim favourites:", err.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Error claiming favourites" });
+  }
+};
+
+module.exports = { getFavourites, toggleFavourite, claimFavourites };
