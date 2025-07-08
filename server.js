@@ -16,6 +16,7 @@ const summarizeRoutes = require("./routes/summarize");
 const favouritesRoutes = require("./routes/favouritesRoutes");
 const comparisonRoutes = require("./routes/comparisonRoutes");
 const competitorAiRoutes = require("./routes/competitorAiAnalysisRoute");
+const optionalAuth = require("./middleware/optionalAuth");
 
 // connect to MongoDB
 mongoose.connect(process.env.DATABASE_URI);
@@ -31,6 +32,9 @@ app.use(bodyparser.json());
 
 // middleware to handle json data
 app.use(express.json());
+
+// auth
+app.use(optionalAuth);
 
 // middleware to handle static files
 app.use(express.static(path.join(__dirname, "public")));
