@@ -1,11 +1,18 @@
+// controllers/favouritesController.js
 const Favourites = require("../models/FavouriteSchema");
+const { getUserId } = require("../utils/getUserId"); // ✅ import helper
 
-/** Helper – returns { owner: … } *or* { anonId: … }  */
+/** Helper – returns { owner: … } *or* { anonId: … } */
 const extractIdent = (req) => {
-  if (req.userId) return { owner: req.userId }; // logged‑in
-  const anonId = req.header("x-anon-id");
-  if (anonId) return { anonId }; // anonymous
-  return null; // neither => error
+  const id = getUserId(req); // Mongo _id OR anonId
+  if (!id) return null;
+
+  // If the request is authenticated, id is an ObjectId
+  if (req.user && req.isAuthenticated()) {
+    return { owner: id };
+  }
+  // Otherwise it’s an anonId string
+  return { anonId: id };
 };
 
 /** Helper – find or create per-user favourites doc */
@@ -19,35 +26,30 @@ const getList = async (ident) => {
   return doc;
 };
 
-/** GET /api/favourites → return current favourites for this user */
+/** GET /api/favourites */
 const getFavourites = async (req, res) => {
   try {
-    const ident = extractIdent(req);
+    const ident = extractIdent(req); // ✅ uses new helper
     const list = await getList(ident);
-    return res.status(200).json({
-      success: true,
-      favourites: list.favourites,
-    });
+    res.status(200).json({ success: true, favourites: list.favourites });
   } catch (err) {
     console.error("Failed to fetch favourites:", err.message);
-    return res.status(500).json({
-      success: false,
-      message: "Error retrieving favourites",
-    });
+    res
+      .status(500)
+      .json({ success: false, message: "Error retrieving favourites" });
   }
 };
 
-/** POST /api/favourites/toggle → add or remove a URL */
+/** POST /api/favourites/toggle */
 const toggleFavourite = async (req, res) => {
   try {
-    const ident = extractIdent(req);
+    const ident = extractIdent(req); // ✅ uses new helper
     const { url } = req.body;
 
     if (!url || typeof url !== "string") {
-      return res.status(400).json({
-        success: false,
-        message: "Missing or invalid URL.",
-      });
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing or invalid URL." });
     }
 
     const list = await getList(ident);
@@ -57,29 +59,24 @@ const toggleFavourite = async (req, res) => {
       list.favourites.pull(url);
     } else {
       if (list.favourites.length >= 5) {
-        return res.status(400).json({
-          success: false,
-          message: "You can only save up to 5 favourites.",
-        });
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: "You can only save up to 5 favourites.",
+          });
       }
       list.favourites.addToSet(url);
     }
 
     await list.save();
-    return res.status(200).json({
-      success: true,
-      favourites: list.favourites, // ✅ This is what your frontend expects
-    });
+    res.status(200).json({ success: true, favourites: list.favourites });
   } catch (err) {
     console.error("Failed to toggle favourite:", err.message);
-    return res.status(500).json({
-      success: false,
-      message: "Error toggling favourite",
-    });
+    res
+      .status(500)
+      .json({ success: false, message: "Error toggling favourite" });
   }
 };
 
-module.exports = {
-  getFavourites,
-  toggleFavourite,
-};
+module.exports = { getFavourites, toggleFavourite };
