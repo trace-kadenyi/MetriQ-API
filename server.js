@@ -3,12 +3,16 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const bodyparser = require("body-parser");
+const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
 const mongoose = require("mongoose");
 const path = require("path");
 
 const port = process.env.PORT || 4000;
 
 // routes
+const passport = require("./auth/passport");
+const authRoutes = require("./auth/routes");
 const root = require("./routes/root");
 const urlChecker = require("./routes/urlChecker");
 const reportRoutes = require("./routes/reportRoutes");
@@ -16,7 +20,6 @@ const summarizeRoutes = require("./routes/summarize");
 const favouritesRoutes = require("./routes/favouritesRoutes");
 const comparisonRoutes = require("./routes/comparisonRoutes");
 const competitorAiRoutes = require("./routes/competitorAiAnalysisRoute");
-const optionalAuth = require("./middleware/optionalAuth");
 
 // connect to MongoDB
 mongoose.connect(process.env.DATABASE_URI);
@@ -30,11 +33,25 @@ app.use(cors());
 // body-parser
 app.use(bodyparser.json());
 
+// cookie-parser
+app.use(cookieParser());
+
 // middleware to handle json data
 app.use(express.json());
 
-// auth
-app.use(optionalAuth);
+// cookie session
+app.use(
+  cookieSession({
+    name: "oauth-session",
+    secret: process.env.SESSION_SECRET,
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.use("/api/auth", authRoutes);
 
 // middleware to handle static files
 app.use(express.static(path.join(__dirname, "public")));
