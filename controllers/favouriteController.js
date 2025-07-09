@@ -1,51 +1,63 @@
+// controllers/favouritesController.js
 const Favourites = require("../models/FavouriteSchema");
+const { getUserId } = require("../utils/getUserId"); // ✅ import helper
 
-/** Helper – get anon ID from header */
-const extractUserId = (req) => req.header("x-anon-id") || null;
+/** Helper – returns { owner: … } *or* { anonId: … } */
+const extractIdent = (req) => {
+  const id = getUserId(req); // Mongo _id OR anonId OR null
+
+  // logged‑in path: only if id is truthy
+  if (req.user && req.isAuthenticated() && id) {
+    return { owner: id };
+  }
+
+  // anonymous path: only if id is truthy
+  if (id) {
+    return { anonId: id };
+  }
+
+  // neither header nor session → throw, so code never inserts owner:null
+  return null;
+};
 
 /** Helper – find or create per-user favourites doc */
-const getList = async (userId) => {
-  if (!userId) throw new Error("Missing anonymous user ID");
+const getList = async (ident) => {
+  if (!ident) throw new Error("Missing user identifier");
 
-  let doc = await Favourites.findOne({ userId });
+  let doc = await Favourites.findOne(ident);
   if (!doc) {
-    doc = await Favourites.create({ userId, favourites: [] });
+    doc = await Favourites.create({ ...ident, favourites: [] });
   }
   return doc;
 };
 
-/** GET /api/favourites → return current favourites for this user */
+/** GET /api/favourites */
 const getFavourites = async (req, res) => {
   try {
-    const userId = extractUserId(req);
-    const list = await getList(userId);
-    return res.status(200).json({
-      success: true,
-      favourites: list.favourites,
-    });
+    const ident = extractIdent(req); // ✅ uses new helper
+    const list = await getList(ident);
+    res.status(200).json({ success: true, favourites: list.favourites });
   } catch (err) {
     console.error("Failed to fetch favourites:", err.message);
-    return res.status(500).json({
-      success: false,
-      message: "Error retrieving favourites",
-    });
+    res
+      .status(500)
+      .json({ success: false, message: "Error retrieving favourites" });
   }
 };
 
-/** POST /api/favourites/toggle → add or remove a URL */
+/** POST /api/favourites/toggle */
 const toggleFavourite = async (req, res) => {
   try {
-    const userId = extractUserId(req);
+    const ident = extractIdent(req); // ✅ uses new helper
     const { url } = req.body;
 
     if (!url || typeof url !== "string") {
-      return res.status(400).json({
-        success: false,
-        message: "Missing or invalid URL.",
-      });
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing or invalid URL." });
     }
 
-    const list = await getList(userId);
+    const list = await getList(ident);
     const alreadySaved = list.favourites.includes(url);
 
     if (alreadySaved) {
@@ -61,20 +73,58 @@ const toggleFavourite = async (req, res) => {
     }
 
     await list.save();
-    return res.status(200).json({
-      success: true,
-      favourites: list.favourites, // ✅ This is what your frontend expects
-    });
+    res.status(200).json({ success: true, favourites: list.favourites });
   } catch (err) {
     console.error("Failed to toggle favourite:", err.message);
-    return res.status(500).json({
-      success: false,
-      message: "Error toggling favourite",
-    });
+    res
+      .status(500)
+      .json({ success: false, message: "Error toggling favourite" });
   }
 };
 
-module.exports = {
-  getFavourites,
-  toggleFavourite,
+/** POST /api/favourites/claim  – merge anon list into user account */
+const claimFavourites = async (req, res) => {
+  if (!req.user || !req.isAuthenticated()) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Not authenticated" });
+  }
+
+  const { anonId } = req.body;
+  if (!anonId) {
+    return res.status(400).json({ success: false, message: "anonId missing" });
+  }
+
+  try {
+    const anonDoc = await Favourites.findOne({ anonId });
+    if (!anonDoc) {
+      return res.status(200).json({ success: true }); // nothing to merge
+    }
+
+    const userId = req.user._id;
+    const userDoc = await Favourites.findOne({ owner: userId });
+
+    if (userDoc) {
+      // merge & dedupe, respect 5‑item limit
+      userDoc.favourites = Array.from(
+        new Set([...userDoc.favourites, ...anonDoc.favourites])
+      ).slice(0, 5);
+      await userDoc.save();
+      await anonDoc.deleteOne();
+    } else {
+      // just convert the anon doc into the owner's
+      anonDoc.owner = userId;
+      anonDoc.anonId = null;
+      await anonDoc.save();
+    }
+
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    console.error("Failed to claim favourites:", err.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Error claiming favourites" });
+  }
 };
+
+module.exports = { getFavourites, toggleFavourite, claimFavourites };
