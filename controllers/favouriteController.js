@@ -4,15 +4,20 @@ const { getUserId } = require("../utils/getUserId"); // ✅ import helper
 
 /** Helper – returns { owner: … } *or* { anonId: … } */
 const extractIdent = (req) => {
-  const id = getUserId(req); // Mongo _id OR anonId
-  if (!id) return null;
+  const id = getUserId(req); // Mongo _id OR anonId OR null
 
-  // If the request is authenticated, id is an ObjectId
-  if (req.user && req.isAuthenticated()) {
+  // logged‑in path: only if id is truthy
+  if (req.user && req.isAuthenticated() && id) {
     return { owner: id };
   }
-  // Otherwise it’s an anonId string
-  return { anonId: id };
+
+  // anonymous path: only if id is truthy
+  if (id) {
+    return { anonId: id };
+  }
+
+  // neither header nor session → throw, so code never inserts owner:null
+  return null;
 };
 
 /** Helper – find or create per-user favourites doc */
@@ -59,12 +64,10 @@ const toggleFavourite = async (req, res) => {
       list.favourites.pull(url);
     } else {
       if (list.favourites.length >= 5) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "You can only save up to 5 favourites.",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "You can only save up to 5 favourites.",
+        });
       }
       list.favourites.addToSet(url);
     }
@@ -82,7 +85,9 @@ const toggleFavourite = async (req, res) => {
 /** POST /api/favourites/claim  – merge anon list into user account */
 const claimFavourites = async (req, res) => {
   if (!req.user || !req.isAuthenticated()) {
-    return res.status(401).json({ success: false, message: "Not authenticated" });
+    return res
+      .status(401)
+      .json({ success: false, message: "Not authenticated" });
   }
 
   const { anonId } = req.body;
@@ -91,13 +96,13 @@ const claimFavourites = async (req, res) => {
   }
 
   try {
-    const anonDoc  = await Favourites.findOne({ anonId });
+    const anonDoc = await Favourites.findOne({ anonId });
     if (!anonDoc) {
       return res.status(200).json({ success: true }); // nothing to merge
     }
 
-    const userId   = req.user._id;
-    const userDoc  = await Favourites.findOne({ owner: userId });
+    const userId = req.user._id;
+    const userDoc = await Favourites.findOne({ owner: userId });
 
     if (userDoc) {
       // merge & dedupe, respect 5‑item limit
