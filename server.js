@@ -20,6 +20,7 @@ const summarizeRoutes = require("./routes/summarize");
 const favouritesRoutes = require("./routes/favouritesRoutes");
 const comparisonRoutes = require("./routes/comparisonRoutes");
 const competitorAiRoutes = require("./routes/competitorAiAnalysisRoute");
+const userRoutes = require("./routes/userRoutes");
 
 // connect to MongoDB
 mongoose.connect(process.env.DATABASE_URI);
@@ -69,6 +70,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Routes
 app.use("/", root);
+app.use("/api/user", userRoutes);
 app.use("/api/url", urlChecker);
 app.use("/api/url", reportRoutes);
 app.use("/api/summarize", summarizeRoutes);
