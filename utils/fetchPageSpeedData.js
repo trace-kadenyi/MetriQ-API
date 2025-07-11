@@ -11,6 +11,16 @@ const fetchPageSpeedData = async (url, strategy) => {
   try {
     const res = await axios.get(requestUrl);
     const data = res.data;
+
+    // ⛔️ Check for missing lighthouse result or categories
+    if (
+      !data.lighthouseResult ||
+      !data.lighthouseResult.categories ||
+      !data.lighthouseResult.audits
+    ) {
+      throw new Error("No PageSpeed data available");
+    }
+
     // results
     const categories = data.lighthouseResult.categories;
     const audits = data.lighthouseResult.audits;
@@ -52,6 +62,16 @@ const fetchPageSpeedData = async (url, strategy) => {
       `Failed to fetch PageSpeed data for ${url} (${strategy})`,
       err.response?.data || err.message
     );
+
+    // 👇 Ensure Axios errors don’t block our custom message
+    if (
+      err.response?.data?.error?.message?.includes("HTTPS") || // example: unsupported protocol
+      err.response?.data?.error?.message?.includes("Blocked") ||
+      err.message === "No PageSpeed data available"
+    ) {
+      throw new Error("No PageSpeed data available");
+    }
+
     throw err;
   }
 };
