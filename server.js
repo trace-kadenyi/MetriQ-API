@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
+app.set("trust proxy", 1);
 const cors = require("cors");
 const bodyparser = require("body-parser");
 const session = require("express-session");
@@ -31,8 +32,8 @@ app.use(express.urlencoded({ extended: false }));
 // cors
 app.use(
   cors({
-    origin: "https://metri-q.vercel.app", // 👉  your React dev origin
-    credentials: true, // 👉  allow cookies / Authorization header
+    origin: "https://metri-q.vercel.app",
+    credentials: true,
   })
 );
 
@@ -43,6 +44,23 @@ app.use(bodyparser.json());
 app.use(express.json());
 
 // express-session  (works with Passport)
+// app.use(
+//   session({
+//     name: "oauth-session",
+//     secret: process.env.SESSION_SECRET,
+//     resave: false,
+//     saveUninitialized: false,
+//     cookie: {
+//       maxAge: 24 * 60 * 60 * 1000,
+//       sameSite: "lax", // so GitHub → frontend redirect works     secure: process.env.NODE_ENV === "production", // true only on HTTPS prod
+//     },
+//     store: MongoStore.create({
+//       mongoUrl: process.env.DATABASE_URI, // reuse your Mongo connection
+//       ttl: 24 * 60 * 60, // keep sessions 1 day
+//     }),
+//   })
+// );
+
 app.use(
   session({
     name: "oauth-session",
@@ -51,11 +69,12 @@ app.use(
     saveUninitialized: false,
     cookie: {
       maxAge: 24 * 60 * 60 * 1000,
-      sameSite: "lax", // so GitHub → frontend redirect works     secure: process.env.NODE_ENV === "production", // true only on HTTPS prod
+      sameSite: "none", // 🔥 Must be 'none' for cross-site
+      secure: true, // 🔥 Required in production
     },
     store: MongoStore.create({
-      mongoUrl: process.env.DATABASE_URI, // reuse your Mongo connection
-      ttl: 24 * 60 * 60, // keep sessions 1 day
+      mongoUrl: process.env.DATABASE_URI,
+      ttl: 24 * 60 * 60,
     }),
   })
 );
