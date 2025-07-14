@@ -32,7 +32,7 @@ app.use(express.urlencoded({ extended: false }));
 // cors
 app.use(
   cors({
-    origin: "https://metri-q.vercel.app",
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   })
 );
@@ -44,23 +44,6 @@ app.use(bodyparser.json());
 app.use(express.json());
 
 // express-session  (works with Passport)
-// app.use(
-//   session({
-//     name: "oauth-session",
-//     secret: process.env.SESSION_SECRET,
-//     resave: false,
-//     saveUninitialized: false,
-//     cookie: {
-//       maxAge: 24 * 60 * 60 * 1000,
-//       sameSite: "lax", // so GitHub → frontend redirect works     secure: process.env.NODE_ENV === "production", // true only on HTTPS prod
-//     },
-//     store: MongoStore.create({
-//       mongoUrl: process.env.DATABASE_URI, // reuse your Mongo connection
-//       ttl: 24 * 60 * 60, // keep sessions 1 day
-//     }),
-//   })
-// );
-
 app.use(
   session({
     name: "oauth-session",
