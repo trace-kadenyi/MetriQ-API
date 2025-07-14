@@ -31,7 +31,7 @@ app.use(express.urlencoded({ extended: false }));
 // cors
 app.use(
   cors({
-    origin: "http://localhost:5173", // 👉  your React dev origin
+    origin: process.env.FRONTEND_URL, // 👉  your React dev origin
     credentials: true, // 👉  allow cookies / Authorization header
   })
 );
