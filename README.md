@@ -89,7 +89,7 @@ GOOGLE_SECRET=your__secret
 GITHUB_ID=your_github_client_id
 GITHUB_SECRET=your_github_client_secret
 SESSION_SECRET=your_cookie_secret
-FRONTEND_URL=http://localhost:5173
+FRONTEND_URL=frontend_url
 GOOGLE_CALLBACK_URL=google_callback_url
 GITHUB_CALLBACK_URL=github_callback_url
 ```
