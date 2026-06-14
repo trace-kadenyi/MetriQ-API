@@ -24,7 +24,9 @@ const competitorAiRoutes = require("./routes/competitorAiAnalysisRoute");
 const userRoutes = require("./routes/userRoutes");
 
 // connect to MongoDB
-mongoose.connect(process.env.DATABASE_URI);
+mongoose.connect(process.env.DATABASE_URI, {
+  maxPoolSize: 10,
+});
 
 // middleware to handle urlencoded data
 app.use(express.urlencoded({ extended: false }));
